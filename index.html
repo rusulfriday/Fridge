@@ -2,65 +2,49 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>الثلاجة التفاعلية</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
-html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:system-ui,sans-serif;background:#000}
-/* Keep MindAR's camera, canvas and tracking surface in one full-screen viewport. */
-a-scene, a-scene.mindar-image, .a-canvas{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;display:block!important;margin:0!important}
-a-scene video{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:system-ui,sans-serif}
+/* Let MindAR position its own camera video and tracking canvas. */
+a-scene{display:block;width:100vw!important;height:100vh!important;height:100dvh!important}
 .a-enter-vr,.a-orientation-modal{display:none!important}
-#hint{position:fixed;top:15px;left:7%;width:86%;box-sizing:border-box;z-index:20;text-align:center;background:#fffdf0ef;padding:12px;border-radius:12px;color:#263d5b}
+#hint{position:fixed;z-index:30;top:env(safe-area-inset-top,12px);left:7%;width:86%;box-sizing:border-box;text-align:center;background:#fffef0ee;color:#263d5b;border-radius:12px;padding:12px}
 #hint.hidden{display:none}
-#status{position:fixed;bottom:14px;left:10px;right:10px;z-index:21;color:white;text-align:center;text-shadow:0 1px 5px #000;font-size:14px;pointer-events:none}
+/* Reliable overlay: stays above the camera even if WebGL textures fail. */
+#infoOverlay{position:fixed;inset:0;z-index:25;display:none;align-items:center;justify-content:center;pointer-events:none}
+#infoOverlay.visible{display:flex}
+#infoOverlay img{display:block;width:auto;height:auto;max-width:94vw;max-height:88dvh;object-fit:contain}
+#status{position:fixed;z-index:35;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:12px;right:12px;text-align:center;color:white;text-shadow:0 1px 4px #000;pointer-events:none;font-size:13px}
 </style>
 </head>
 <body>
 <div id="hint">وجّه الكاميرا نحو بوستر الثلاجة 🧊</div>
+<div id="infoOverlay"><img id="infoImage" src="./information.png" alt="معلومات الثلاجة"></div>
 <div id="status"></div>
 <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true" color-space="sRGB" renderer="colorManagement: true; alpha: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded>
 <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-<a-entity id="target" mindar-image-target="targetIndex: 0">
-<a-plane id="overlay" position="0 0 0.02" width="1" height="1.595" material="shader: flat; side: double; transparent: true; alphaTest: 0.01; depthWrite: false" visible="false"></a-plane>
-</a-entity>
+<a-entity id="target" mindar-image-target="targetIndex: 0"></a-entity>
 </a-scene>
 <script>
 const hint=document.getElementById('hint');
+const infoOverlay=document.getElementById('infoOverlay');
+const infoImage=document.getElementById('infoImage');
 const status=document.getElementById('status');
+let imageLoaded=infoImage.complete&&infoImage.naturalWidth>0;
+infoImage.onload=()=>{imageLoaded=true;if(infoOverlay.classList.contains('visible'))status.textContent='';};
+infoImage.onerror=()=>{status.textContent='تعذر تحميل information.png';};
 const target=document.getElementById('target');
-const overlay=document.getElementById('overlay');
-let found=false, ready=false;
-const image=new Image();
-image.onload=()=>{
-  ready=true;
-  const texture=new THREE.Texture(image);
-  texture.needsUpdate=true;
-  texture.colorSpace=THREE.SRGBColorSpace || texture.colorSpace;
-  const apply=()=>{
-    if(!overlay.getObject3D('mesh')){requestAnimationFrame(apply);return;}
-    const mesh=overlay.getObject3D('mesh');
-    mesh.material.map=texture;
-    mesh.material.transparent=true;
-    mesh.material.needsUpdate=true;
-    overlay.setAttribute('visible',found);
-    if(found)status.textContent='';
-  };
-  apply();
-};
-image.onerror=()=>{status.textContent='تعذر تحميل information.png';};
-image.src='./information.png?v=4';
 target.addEventListener('targetFound',()=>{
-  found=true;
   hint.classList.add('hidden');
-  overlay.setAttribute('visible',ready);
-  status.textContent=ready?'':'جار تحميل صورة المعلومات…';
+  infoOverlay.classList.add('visible');
+  status.textContent=imageLoaded?'':'جار تحميل الصورة…';
 });
 target.addEventListener('targetLost',()=>{
-  found=false;
   hint.classList.remove('hidden');
-  overlay.setAttribute('visible',false);
+  infoOverlay.classList.remove('visible');
   status.textContent='';
 });
 </script>
