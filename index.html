@@ -7,7 +7,11 @@
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
-body{margin:0;font-family:system-ui,sans-serif;background:#000}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:system-ui,sans-serif;background:#000}
+/* Keep MindAR's camera, canvas and tracking surface in one full-screen viewport. */
+a-scene, a-scene.mindar-image, .a-canvas{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;display:block!important;margin:0!important}
+a-scene video{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important}
+.a-enter-vr,.a-orientation-modal{display:none!important}
 #hint{position:fixed;top:15px;left:7%;width:86%;box-sizing:border-box;z-index:20;text-align:center;background:#fffdf0ef;padding:12px;border-radius:12px;color:#263d5b}
 #hint.hidden{display:none}
 #status{position:fixed;bottom:14px;left:10px;right:10px;z-index:21;color:white;text-align:center;text-shadow:0 1px 5px #000;font-size:14px;pointer-events:none}
@@ -19,7 +23,7 @@ body{margin:0;font-family:system-ui,sans-serif;background:#000}
 <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true" color-space="sRGB" renderer="colorManagement: true; alpha: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded>
 <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 <a-entity id="target" mindar-image-target="targetIndex: 0">
-<a-plane id="overlay" position="0 0 0.02" width="1" height="1.56" material="shader: flat; side: double; transparent: true; alphaTest: 0.01; depthWrite: false" visible="false"></a-plane>
+<a-plane id="overlay" position="0 0 0.02" width="1" height="1.595" material="shader: flat; side: double; transparent: true; alphaTest: 0.01; depthWrite: false" visible="false"></a-plane>
 </a-entity>
 </a-scene>
 <script>
@@ -46,7 +50,7 @@ image.onload=()=>{
   apply();
 };
 image.onerror=()=>{status.textContent='تعذر تحميل information.png';};
-image.src='./information.png?v=3';
+image.src='./information.png?v=4';
 target.addEventListener('targetFound',()=>{
   found=true;
   hint.classList.add('hidden');
