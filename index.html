@@ -2,51 +2,62 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>الثلاجة التفاعلية</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
-body{margin:0;font-family:system-ui,sans-serif}
-#hint{position:fixed;top:16px;left:8%;width:84%;box-sizing:border-box;z-index:20;text-align:center;background:#fffdf0ed;padding:12px;border-radius:14px;color:#263d5b}
+body{margin:0;font-family:system-ui,sans-serif;background:#000}
+#hint{position:fixed;top:15px;left:7%;width:86%;box-sizing:border-box;z-index:20;text-align:center;background:#fffdf0ef;padding:12px;border-radius:12px;color:#263d5b}
 #hint.hidden{display:none}
-#fallback{display:none;position:fixed;inset:0;z-index:15;pointer-events:none;align-items:center;justify-content:center}
-#fallback.show{display:flex}
-#fallback img{display:block;max-width:90vw;max-height:82dvh;object-fit:contain;box-shadow:0 2px 18px #0003}
-#status{position:fixed;bottom:12px;left:12px;right:12px;text-align:center;color:white;text-shadow:0 1px 4px #000;z-index:21;font-size:13px;pointer-events:none}
+#status{position:fixed;bottom:14px;left:10px;right:10px;z-index:21;color:white;text-align:center;text-shadow:0 1px 5px #000;font-size:14px;pointer-events:none}
 </style>
 </head>
 <body>
 <div id="hint">وجّه الكاميرا نحو بوستر الثلاجة 🧊</div>
-<div id="fallback"><img src="./information.png" alt="معلومات الثلاجة"></div>
 <div id="status"></div>
-<a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; filterMinCF: 0.001; filterBeta: 0.01" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded>
-<a-assets timeout="15000"><img id="info" src="./information.png" crossorigin="anonymous"></a-assets>
+<a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true" color-space="sRGB" renderer="colorManagement: true; alpha: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded>
 <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-<a-entity mindar-image-target="targetIndex: 0" id="target">
-<a-plane position="0 0 0.05" width="1" height="1.561" material="src: #info; shader: flat; side: double; transparent: false; opacity: 1" visible="true"></a-plane>
+<a-entity id="target" mindar-image-target="targetIndex: 0">
+<a-plane id="overlay" position="0 0 0.02" width="1" height="1.56" material="shader: flat; side: double; transparent: true; alphaTest: 0.01; depthWrite: false" visible="false"></a-plane>
 </a-entity>
 </a-scene>
 <script>
-const target=document.querySelector('#target');
-const hint=document.querySelector('#hint');
-const fallback=document.querySelector('#fallback');
-const status=document.querySelector('#status');
-const img=document.querySelector('#fallback img');
-let imageReady=false;
-img.addEventListener('load',()=>{imageReady=true;});
-img.addEventListener('error',()=>{status.textContent='تعذر تحميل صورة المعلومات (information.png)';});
+const hint=document.getElementById('hint');
+const status=document.getElementById('status');
+const target=document.getElementById('target');
+const overlay=document.getElementById('overlay');
+let found=false, ready=false;
+const image=new Image();
+image.onload=()=>{
+  ready=true;
+  const texture=new THREE.Texture(image);
+  texture.needsUpdate=true;
+  texture.colorSpace=THREE.SRGBColorSpace || texture.colorSpace;
+  const apply=()=>{
+    if(!overlay.getObject3D('mesh')){requestAnimationFrame(apply);return;}
+    const mesh=overlay.getObject3D('mesh');
+    mesh.material.map=texture;
+    mesh.material.transparent=true;
+    mesh.material.needsUpdate=true;
+    overlay.setAttribute('visible',found);
+    if(found)status.textContent='';
+  };
+  apply();
+};
+image.onerror=()=>{status.textContent='تعذر تحميل information.png';};
+image.src='./information.png?v=3';
 target.addEventListener('targetFound',()=>{
- hint.classList.add('hidden');
- // A visible 2D fallback guarantees that the information is shown even if
- // a device's WebGL texture does not render. It is not poster-anchored.
- fallback.classList.add('show');
- status.textContent=imageReady?'تم التعرف على البوستر':'تم التعرف على البوستر — جار تحميل الصورة';
+  found=true;
+  hint.classList.add('hidden');
+  overlay.setAttribute('visible',ready);
+  status.textContent=ready?'':'جار تحميل صورة المعلومات…';
 });
 target.addEventListener('targetLost',()=>{
- hint.classList.remove('hidden');
- fallback.classList.remove('show');
- status.textContent='';
+  found=false;
+  hint.classList.remove('hidden');
+  overlay.setAttribute('visible',false);
+  status.textContent='';
 });
 </script>
 </body>
