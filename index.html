@@ -18,10 +18,10 @@ body{margin:0;font-family:system-ui,sans-serif}
 </head>
 <body>
 <div id="hint">وجّه الكاميرا نحو بوستر الثلاجة 🧊</div>
-<div id="fallback"><img src="./information.jpg" alt="معلومات الثلاجة"></div>
+<div id="fallback"><img src="./information.png" alt="معلومات الثلاجة"></div>
 <div id="status"></div>
 <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; filterMinCF: 0.001; filterBeta: 0.01" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded>
-<a-assets timeout="15000"><img id="info" src="./information.jpg" crossorigin="anonymous"></a-assets>
+<a-assets timeout="15000"><img id="info" src="./information.png" crossorigin="anonymous"></a-assets>
 <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 <a-entity mindar-image-target="targetIndex: 0" id="target">
 <a-plane position="0 0 0.05" width="1" height="1.561" material="src: #info; shader: flat; side: double; transparent: false; opacity: 1" visible="true"></a-plane>
@@ -35,7 +35,7 @@ const status=document.querySelector('#status');
 const img=document.querySelector('#fallback img');
 let imageReady=false;
 img.addEventListener('load',()=>{imageReady=true;});
-img.addEventListener('error',()=>{status.textContent='تعذر تحميل صورة المعلومات (information.jpg)';});
+img.addEventListener('error',()=>{status.textContent='تعذر تحميل صورة المعلومات (information.png)';});
 target.addEventListener('targetFound',()=>{
  hint.classList.add('hidden');
  // A visible 2D fallback guarantees that the information is shown even if
